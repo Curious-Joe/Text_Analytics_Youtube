@@ -1,11 +1,14 @@
 ---
-title: "Text Analysis on Youtube Videos Posted About 'Bangladesh'"
+title: "Text Analytics on Youtube Videos Posted About 'Bangladesh'"
 author: "Arafath Hossain"
 date: "June 27, 2018"
 output:
-  github_document:
+  html_document:
     toc: true
-    toc_depth: 2
+    code_folding: hide
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
 ---
 
 
@@ -31,7 +34,6 @@ library(tidytext)
 library(syuzhet)
 library(ggraph)
 library(igraph)
-library(textdata)
 ```
 
 ## Part 01: Background about this project
@@ -88,7 +90,7 @@ videos_year[,c('viewCount', 'likeCount', 'dislikeCount', 'favoriteCount', 'comme
 In the last part we have collected video specific statistics and compiled all in a single file named __videos_year__. A look into the file reveals that it contains 589 observations/rows and 21 variables/columns. Or in other words we have 21 different attributes collected for each of the videos. To look at the variables some basic summary codes have been run and the results are shown below:
 
 ``` {r }
-videos_year = read.csv('Data/youtube_video_raw+stat_2017-2018.csv')
+videos_year = read.csv('youtube_video_raw+stat_2017-2018.csv')
 dim(videos_year)
 names(videos_year)
 ```
@@ -137,6 +139,7 @@ head(videos_year$title,5)
 At this stage, before enterign into the data analysis we'll create three more variables that contain the ratios of likes, dislikes and comments against the total views of respective video. Having this ratios will help us in future to extract insights without bias by considering ratios rather than the absolute numbers. 
 
 ```{r}
+# videos_year = read.csv('cleaned_youtube_video_2017-2018.csv')
 # creating like, dislike, comment ratio
 videos_year = videos_year %>%
   mutate(like_ratio = likeCount/viewCount) %>% 
@@ -193,15 +196,14 @@ From the abundance of paste and green color in the above plot we can immediately
 
 So what are the other videos about? We already have got a basic understanding on what the top viewed videos were about. Now to have a deeper understanding about the common discussion areas of all the videos, we will use different key word extraction techniques for this purpose.  
 
-As a first step, let's transform our text data into a matrix, more precisely a 'Document Term Matrix'. Where each word in the text corpus is separated and columns are created for each of these words. Then each sentence is plotted as a row and the columns containing words that are in each docs/sentece get a score of 1 and others 0. Which eventually creates a sparse matrix with lots of zeros. In our case the sparsity is really high (very close to 100%) meaning that there are lots of zeros or in other words there is a wide variety in the titles of the videos. 
+As a first step, let's transform our text data into a matrix, more precisely a 'Document Term Matrix'. Where each word in the text corpus is separated and columns are created for each of these words. Then each sentence is plotted as a row and the columns containing words that are in each docs/sentence get a score of 1 and others 0. Which eventually creates a sparse matrix with lots of zeros. In our case the sparsity is really high (very close to 100%) meaning that there are lots of zeros or in other words there is a wide variety in the titles of the videos. 
 
 ```{r}
 videos_year$title = removeWords(as.character(videos_year$title), stopwords('english'))
 videos_year_title <- enc2utf8(videos_year$title)
-corpus = Corpus(VectorSource(videos_year_title))
 
+corpus = Corpus(VectorSource(videos_year_title))
 dtm = DocumentTermMatrix(corpus)
-dtm
 doc.length = apply(dtm, 1, sum)
 dtm = dtm[doc.length > 0,]
 inspect(dtm[10:11,])
@@ -406,7 +408,7 @@ video_comments = rbind(comment_rohingya,comment_india,comment_dhaka,comment_cric
 ```
 
 ```{r}
-video_comments=read.csv('Data/video_comments_top10videos_four_categories.csv')
+video_comments=read.csv('video_comments_top10videos_four_categories.csv')
 summary(video_comments$label)
 ```
 
@@ -440,6 +442,7 @@ Now moving onto the text cleaning step for the _textDisplay_ column we have clea
 Before moving into the analysis of sentiment scores we'll take a look at the trend of video posting. Naturally we expect to see videos in different topics being posted at different rate over the period of months.
 
 ```{r}
+# video_comments=read.csv('cleaned_video_comments_top10videos_four_categories.csv')
 # calculating labelwise trend of video posting
 video_comments %>%
   group_by(tidy_date) %>%
